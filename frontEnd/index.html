@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelo Voice to Natural Sound</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">Voice Recognition</h1>
+                <p class="app-subtitle">Transform your voice notes into natural speech</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="controls-section">
+                <div class="selectors-grid">
+                    <div class="selector-card">
+                        <label for="modelSelector" class="selector-label">
+                            <span class="label-text">Transcription Model</span>
+                            <span class="label-hint">Choose your preferred engine</span>
+                        </label>
+                        <div class="select-wrapper">
+                            <select id="modelSelector" class="custom-select">
+                                <!-- <option value="lora" selected>Fine-tuned LoRA Model (Local)</option> -->
+                                <option value="large_v3">Whisper Large v3 (Groq API)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="selector-card">
+                        <label for="promptSelector" class="selector-label">
+                            <span class="label-text">Processing Task</span>
+                            <span class="label-hint">Select output style</span>
+                        </label>
+                        <div class="select-wrapper">
+                            <select id="promptSelector" class="custom-select">
+                                <!-- <option value="randomizer" selected>Randomize (5 words)</option> -->
+                                <option value="summarizer">Extreme Summarizer (5 words)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="record-section">
+                <div class="record-area">
+                    <button id="recordButton" class="record-btn" aria-label="Start Recording">
+                        <div class="btn-content">
+                            <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                <path d="M17 11h-1c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92z"/>
+                            </svg>
+                            <div class="pulse-ring"></div>
+                        </div>
+                    </button>
+                    <p id="recordingStatus" class="status-text">Tap to start recording</p>
+                </div>
+            </div>
+
+            <div id="results" class="results-section hidden">
+                <div class="result-cards">
+                    <div class="result-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Original Transcription</h3>
+                            <div class="card-badge">Raw</div>
+                        </div>
+                        <div class="card-content">
+                            <p id="initialTranscription" class="transcription-text">Processing...</p>
+                            <audio id="initialAudio" class="audio-player" controls></audio>
+                        </div>
+                    </div>
+
+                    <div class="result-card featured">
+                        <div class="card-header">
+                            <h3 class="card-title">Text Summary</h3>
+                            <div class="card-badge success">Enhanced</div>
+                        </div>
+                        <div class="card-content">
+                            <p id="finalSound" class="transcription-text">Processing...</p>
+                            <audio id="finalAudio" class="audio-player" controls></audio>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
