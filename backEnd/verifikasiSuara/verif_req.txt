@@ -1,0 +1,5 @@
+numpy
+resemblyzer
+librosa
+soundfile
+pyaudio
