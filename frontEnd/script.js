@@ -97,35 +97,41 @@
         }
     });
 
- // --- MODIFIED sendAudioToServer function ---
+// --- MODIFIED sendAudioToServer function ---
 async function sendAudioToServer() {
     const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
     audioChunks = [];
 
+    // Get values from BOTH selectors
     const selectedModel = modelSelector.value;
     const selectedPrompt = promptSelector.value;
 
     const formData = new FormData();
     formData.append('audio_file', audioBlob, 'recording.webm');
-    formData.append('model_selection', selectedModel);
+    // Append both model and prompt selections
+    formData.append('model_selection', selectedModel); 
     formData.append('prompt_selection', selectedPrompt);
 
     resultsDiv.classList.remove('hidden');
     initialTranscriptionElem.textContent = 'Transcribing...';
     finalSoundElem.textContent = 'Refining...';
 
-    // Sembunyikan dan reset kedua audio player
     finalAudioElem.classList.remove('visible');
     finalAudioElem.src = ''; 
     initialAudioElem.classList.remove('visible');
     initialAudioElem.src = '';
 
     try {
-        // Langkah 1: Kirim audio untuk diproses (transkripsi dan TTS di backend)
         const processResponse = await fetch(`${API_BASE_URL}/process_audio`, {
             method: 'POST',
             body: formData
         });
+
+        // --- NEW: ERROR HANDLING FOR SPEAKER VERIFICATION ---
+        if (processResponse.status === 403) { // 403 Forbidden
+            const errorData = await processResponse.json();
+            throw new Error(errorData.message || 'Speaker verification failed.');
+        }
 
         if (!processResponse.ok) {
             const errorData = await processResponse.json();
@@ -134,17 +140,14 @@ async function sendAudioToServer() {
 
         const data = await processResponse.json();
 
-        // Tampilkan hasil teks
         initialTranscriptionElem.textContent = data.initial_transcription;
         finalSoundElem.textContent = data.natural_text;
 
-        // Langkah 2: Ambil kedua file audio yang sudah dibuat oleh backend secara paralel
         const [summaryAudioResponse, transcriptionAudioResponse] = await Promise.all([
             fetch(`${API_BASE_URL}/get_response_audio`),
-            fetch(`${API_BASE_URL}/get_transcription_audio`) // Endpoint baru yang simetris
+            fetch(`${API_BASE_URL}/get_transcription_audio`)
         ]);
 
-        // Proses dan tampilkan audio untuk Text Summary
         if (summaryAudioResponse.ok) {
             const audioBlob = await summaryAudioResponse.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
@@ -155,7 +158,6 @@ async function sendAudioToServer() {
             finalSoundElem.textContent += " (Audio failed to load)";
         }
         
-        // Proses dan tampilkan audio untuk Original Transcription
         if (transcriptionAudioResponse.ok) {
             const audioBlob = await transcriptionAudioResponse.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
@@ -170,7 +172,8 @@ async function sendAudioToServer() {
         
     } catch (error) {
         console.error("Error processing audio:", error);
-        initialTranscriptionElem.textContent = 'An error occurred during processing.';
+        // Display a more user-friendly error message
+        initialTranscriptionElem.textContent = 'An error occurred.';
         finalSoundElem.textContent = '-';
         recordingStatus.textContent = `Error: ${error.message}`;
     }
