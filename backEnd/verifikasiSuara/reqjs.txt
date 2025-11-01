@@ -1,0 +1,5 @@
+npm install @xenova/transformers node-record-lpcm16 wav fluent-ffmpeg
+
+npm install @xenova/transformers fluent-ffmpeg
+
+sudo apt-get install ffmpeg
