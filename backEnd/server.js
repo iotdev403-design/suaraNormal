@@ -24,7 +24,7 @@ const PORT = 8001;
 const UPLOADS_DIR = 'uploads';
 const RESPONSES_DIR = 'responses';
 const ENROLLMENT_FILE = 'audio_saya.mp3'; // Our reference voice file
-const THRESHOLD = 0.65; // Speaker verification threshold
+const THRESHOLD = 0.63; // Speaker verification threshold
 
 // --- Groq Client Setup ---
 const groqApiKey = process.env.GROQ_API_KEY;
