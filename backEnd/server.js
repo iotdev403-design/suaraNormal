@@ -1,18 +1,18 @@
-// --- Import Dependencies ---
-require('dotenv').config(); // Load environment variables from .env file
-const fs = require('fs');
-const path = require('path');
-const express = require('express');
-const multer = require('multer');
-const cors = require('cors');
-const { Groq } = require('groq-sdk');
-const googleTTS = require('google-tts-api');
-const { randomUUID } = require('crypto'); // For unique filenames
+import 'dotenv/config'; // Load environment variables from .env file
+import fs from 'fs';
+import path from 'path';
+import express from 'express';
+import multer from 'multer';
+import cors from 'cors';
+import { Groq } from 'groq-sdk';
+import googleTTS from 'google-tts-api';
+import { randomUUID } from 'crypto'; // For unique filenames
+import { AutoProcessor, WavLMForXVector } from '@xenova/transformers';
+import ffmpeg from 'fluent-ffmpeg';
+import wav from 'node-wav';
 
-// --- Local Imports for Speaker Verification ---
-const { AutoProcessor, WavLMForXVector } = require('@xenova/transformers');
-const ffmpeg = require('fluent-ffmpeg');
-const wav = require('node-wav');
+
+
 
 // --- Configuration ---
 const app = express();
@@ -155,16 +155,20 @@ async function speakWithGTTS(text, lang = 'id') {
         return null;
     }
     try {
-        const url = googleTTS.getAudioUrl(text, { lang, slow: false });
+        // Assuming 'googleTTS' is the default export from 'google-tts-api'
+        // Check the documentation for the exact function name if this fails
+        const url = googleTTS.getAudioUrl(text, { lang, slow: false, host: 'https://translate.google.com' }); // Adding host is often recommended
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        
+
         const filePath = path.join(RESPONSES_DIR, `response_${randomUUID()}.mp3`);
         fs.writeFileSync(filePath, buffer);
         return filePath;
     } catch (error) {
         console.error("❌ Gagal menghasilkan audio (gTTS):", error);
+        // Consider logging the specific error message to see if it's an import issue
+        // console.error("Error details:", error.message, error.stack);
         return null;
     }
 }

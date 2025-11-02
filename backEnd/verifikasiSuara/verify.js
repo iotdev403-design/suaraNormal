@@ -4,7 +4,7 @@ const readline = require('readline');
 const { spawn } = require('child_process');
 
 // For audio processing - SIMPLIFIED VERSION
-const { AutoProcessor, WavLMForXVector } = require('@xenova/transformers');
+let AutoProcessor, WavLMForXVector;
 const ffmpeg = require('fluent-ffmpeg');
 const wav = require('node-wav');
 
@@ -196,6 +196,11 @@ async function extractEmbedding(audioPath, processor, model) {
 // --- Main Program ---
 async function main() {
   try {
+
+    const transformers = await import('@xenova/transformers');
+    ({ AutoProcessor, WavLMForXVector } = transformers);
+
+
     console.log("🎙️  SISTEM VERIFIKASI SUARA DENGAN TRANSFORMERS");
     printSeparator();
     
