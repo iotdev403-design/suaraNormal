@@ -1,3 +1,7 @@
+
+
+import gtts from 'gtts';
+import { promisify } from 'util';
 import 'dotenv/config'; // Load environment variables from .env file
 import fs from 'fs';
 import path from 'path';
@@ -148,27 +152,34 @@ async function summarizeWithGroq(transcription, promptKey = 'summarizer') {
     }
 }
 
-// Standard Text-to-Speech Function (Google TTS)
+
+
+
+
+// Standard Text-to-Speech Function menggunakan gtts
 async function speakWithGTTS(text, lang = 'id') {
     if (!text || !text.trim()) {
         console.warn("⚠️ Mencoba menghasilkan audio dari teks kosong.");
         return null;
     }
     try {
-        // Assuming 'googleTTS' is the default export from 'google-tts-api'
-        // Check the documentation for the exact function name if this fails
-        const url = googleTTS.getAudioUrl(text, { lang, slow: false, host: 'https://translate.google.com' }); // Adding host is often recommended
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
         const filePath = path.join(RESPONSES_DIR, `response_${randomUUID()}.mp3`);
-        fs.writeFileSync(filePath, buffer);
+        
+        const speech = new gtts(text, lang);
+        
+        // Konversi callback ke promise
+        await new Promise((resolve, reject) => {
+            speech.save(filePath, (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+        
+        console.log(`✅ Audio berhasil dibuat: ${filePath}`);
         return filePath;
     } catch (error) {
         console.error("❌ Gagal menghasilkan audio (gTTS):", error);
-        // Consider logging the specific error message to see if it's an import issue
-        // console.error("Error details:", error.message, error.stack);
+        console.error("Error details:", error.message);
         return null;
     }
 }
