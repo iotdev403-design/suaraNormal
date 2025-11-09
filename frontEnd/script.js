@@ -175,6 +175,6 @@ async function sendAudioToServer() {
         // Display a more user-friendly error message
         initialTranscriptionElem.textContent = 'An error occurred.';
         finalSoundElem.textContent = '-';
-        recordingStatus.textContent = `Error: ${error.message}`;
+        recordingStatus.textContent = `ERROR: ${error.message}`;
     }
 }

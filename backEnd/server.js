@@ -24,7 +24,7 @@ const PORT = 8001;
 const UPLOADS_DIR = 'uploads';
 const RESPONSES_DIR = 'responses';
 const ENROLLMENT_FILE = 'audio_saya.mp3'; // Our reference voice file
-const THRESHOLD = 0.63; // Speaker verification threshold
+const THRESHOLD = 0.69; // Speaker verification threshold
 
 // --- Groq Client Setup ---
 const groqApiKey = process.env.GROQ_API_KEY;
@@ -212,7 +212,7 @@ app.post('/process_audio', upload.single('audio_file'), async (req, res) => {
             const verificationResult = await verifySpeaker(tempAudioPath);
             if (!verificationResult) {
                 console.log("❌ Verifikasi GAGAL. Pengguna tidak diizinkan.");
-                return res.status(403).json({ message: "Verifikasi suara gagal. Anda tidak diizinkan menggunakan suara ini." });
+                return res.status(403).json({ message: "VERIFIKASI GAGAL, PEMBICARA TIDAK DIKENAL" });
             }
             console.log("✅ Verifikasi BERHASIL.");
             isMe = true;
