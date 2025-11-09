@@ -23,7 +23,8 @@ const app = express();
 const PORT = 8001;
 const UPLOADS_DIR = 'uploads';
 const RESPONSES_DIR = 'responses';
-const ENROLLMENT_FILE = 'audio_saya.mp3'; // Our reference voice file
+// const ENROLLMENT_FILE = 'audio_saya.mp3'; // Our reference voice file
+let enrollmentFilePath = path.join(UPLOADS_DIR, 'enrollment_voice.mp3'); // Path pendaftaran yang konsisten
 const THRESHOLD = 0.69; // Speaker verification threshold
 
 // --- Groq Client Setup ---
@@ -90,13 +91,20 @@ async function verifySpeaker(verificationAudioPath) {
     }
     console.log("🕵️  Menjalankan verifikasi suara...");
 
+       // TAMBAHKAN PENGECEKAN INI:
+    if (!fs.existsSync(enrollmentFilePath)) {
+        console.error("❌ File pendaftaran suara belum ada. Harap rekam suara terlebih dahulu.");
+        // Melempar error agar bisa ditangkap di endpoint /process_audio
+        throw new Error("ENROLLMENT_FILE_NOT_FOUND");
+    }
+
     const enrollmentWav = path.join(UPLOADS_DIR, 'enrollment.wav');
     const verificationWav = path.join(UPLOADS_DIR, `verify_${randomUUID()}.wav`);
 
     try {
         // Convert both files to WAV format required by the model
         await Promise.all([
-            new Promise((res, rej) => ffmpeg(ENROLLMENT_FILE).audioFrequency(16000).audioChannels(1).toFormat('wav').on('end', res).on('error', rej).save(enrollmentWav)),
+            new Promise((res, rej) => ffmpeg(enrollmentFilePath).audioFrequency(16000).audioChannels(1).toFormat('wav').on('end', res).on('error', rej).save(enrollmentWav)),
             new Promise((res, rej) => ffmpeg(verificationAudioPath).audioFrequency(16000).audioChannels(1).toFormat('wav').on('end', res).on('error', rej).save(verificationWav))
         ]);
 
@@ -195,6 +203,35 @@ async function speakWithPersonalizedTTS(text) {
 
 // --- API Endpoints ---
 
+app.post('/enroll_voice', upload.single('enrollment_file'), async (req, res) => {
+    console.log("\n✍️  Permintaan diterima di /enroll_voice");
+
+    if (!req.file) {
+        return res.status(400).json({ message: 'Tidak ada file audio yang diunggah untuk pendaftaran.' });
+    }
+
+    const tempAudioPath = req.file.path;
+
+    try {
+        // Hapus file pendaftaran lama jika ada, untuk digantikan dengan yang baru
+        if (fs.existsSync(enrollmentFilePath)) {
+            fs.unlinkSync(enrollmentFilePath);
+            console.log("   File pendaftaran lama telah dihapus.");
+        }
+
+        // Pindahkan file yang baru diunggah ke path pendaftaran yang permanen
+        fs.renameSync(tempAudioPath, enrollmentFilePath);
+        
+        console.log(`✅ Suara pendaftaran berhasil disimpan di: ${enrollmentFilePath}`);
+        return res.status(200).json({ message: "Suara pendaftaran berhasil direkam." });
+
+    } catch (error) {
+        console.error("❌ Terjadi error pada /enroll_voice:", error);
+        return res.status(500).json({ message: `Terjadi error di server: ${error.message}` });
+    }
+    // Tidak perlu menghapus tempAudioPath karena sudah di-rename
+});
+
 app.post('/process_audio', upload.single('audio_file'), async (req, res) => {
     console.log("\n🚀 Permintaan diterima di /process_audio");
 
@@ -253,6 +290,9 @@ app.post('/process_audio', upload.single('audio_file'), async (req, res) => {
         });
 
     } catch (error) {
+        if (error.message === "ENROLLMENT_FILE_NOT_FOUND") {
+            return res.status(400).json({ message: "ANDA BELUM MEREKAM SUARA. Harap rekam suara pendaftaran terlebih dahulu." });
+        }
         console.error("❌ Terjadi error pada /process_audio:", error);
         return res.status(500).json({ message: `Terjadi error di server: ${error.message}` });
     } finally {
